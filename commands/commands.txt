@@ -2,7 +2,7 @@ Commands:
 
 !help or !commands - displays a list of Commands
 !summon - summons the rat army to you (Enables music)
-!disperse - tell the rat army to leave (disables music)
+!dust - tell the rat army to leave (disables music)
 !stop - yeets them mf rats outta the voice chat
 !mixtape - the og mixtape for the funnee little rat
 !shrek - a 2000s hit

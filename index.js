@@ -38,10 +38,10 @@ client.once('disconnect', () => {
     console.log('RatBot is disconnected');
 });
 
-
 //Commands
 client.on('message', message =>
 {
+    const voiceChannel = message.member.voice.channel;
     //if the bot sends a message with the prefix+command, it will ignore it in order to prevent infinite loop in some instances
     if(message.author.bot)
     {
@@ -66,7 +66,7 @@ client.on('message', message =>
     }
 
     //Sends the rats away (disables the music playing functionality until they're summoned again)
-    if(message.content.toLowerCase() === '!disperse')
+    if(message.content.toLowerCase() === '!dust')
     {
         if(summoned == 0)
         {
@@ -75,6 +75,7 @@ client.on('message', message =>
         else
         {
             message.channel.send(message.member.displayName + " sends the rats back to their holes");
+            voiceChannel.leave();
             return summoned = 0;
         }
     }
@@ -82,7 +83,7 @@ client.on('message', message =>
     //This is where all of the music commands will go
     if(summoned)
     {
-            const voiceChannel = message.member.voice.channel;
+            
             if(!voiceChannel)
             {
                 return message.channel.send("You have to be in a voice channel to use their full capabilities " + message.member.displayName);
@@ -185,7 +186,7 @@ client.on('message', message =>
                   {                
                       message.member.voice.channel.join().then(connection => 
                       {
-                          connection.play(ytdl('https://www.youtube.com/watch?v=0jXTBAGv9ZQ', {volume: '0.5'}, {filter: 'audioonly'})).on("end", end => {
+                          connection.play(ytdl('https://www.youtube.com/watch?v=kKnkhAQxLKI', {volume: '0.5'}, {filter: 'audioonly'})).on("end", end => {
                               connection.channel.leave();
                           });
                       }).catch(console.error);
@@ -214,10 +215,6 @@ client.on('message', message =>
                     inCall = 1;
                 }
             });
-    }
-    else
-    {
-        return message.channel.send("The rats can't sing a beautiful song if they aren't here. Use !summon.");
     }
 });
 
