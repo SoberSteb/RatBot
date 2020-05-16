@@ -1,59 +1,223 @@
-"use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const Discord = require("discord.js");
-const ConfigFile = require("./config");
-const client = new Discord.Client();
-let commands = [];
-loadCommands(`${__dirname}/commands`);
-client.on("ready", () => {
-    console.log("Ready to go!");
-});
-client.on("message", msg => 
+//Kameron Jusseaume
+//5/12/2020
+//RatBot Version 1.0
+//Includes all Commands in one .js file to be placed into individual .js files later
+
+const Discord = require('discord.js');
+const
 {
-    if (msg.author.bot) 
-    {
-        return;
-    }
-    if (!msg.content.startsWith(ConfigFile.config.prefix)) 
-    {
-        return;
-    }
-    handleCommand(msg);
+    prefix,
+    token,
+} = require('./config.json');
+
+var fs = require('fs');
+
+var commandsList = fs.readFileSync('commands/commands.txt', 'utf8');
+
+//Keeps track of if the rats have been summoned
+//0 - no music will be played
+//1 - music functionality 
+var summoned = 0;
+
+var inCall = 0;
+
+//needed to play youtube vids
+const ytdl = require('ytdl-core');
+
+const client = new Discord.Client();
+
+client.login(token);
+
+client.once('ready', () => {
+    console.log('RatBot is ready');
 });
-function handleCommand(msg) {
-    return __awaiter(this, void 0, void 0, function* () {
-        let command = msg.content.split(" ")[0].replace(ConfigFile.config.prefix, "");
-        let args = msg.content.split(" ").slice(1);
-        for (const commandClass of commands) {
-            try {
-                if (!commandClass.isThisCommand(command)) {
-                    continue;
-                }
-                yield commandClass.runCommand(args, msg, client);
-            }
-            catch (exception) {
-                console.log(exception);
-            }
-        }
-    });
-}
-function loadCommands(commandsPath) {
-    if (!ConfigFile.config || ConfigFile.config.commands.length === 0) {
+client.once('reconnecting', () => {
+    console.log('RatBot is reconnecting');
+});
+client.once('disconnect', () => {
+    console.log('RatBot is disconnected');
+});
+
+
+//Commands
+client.on('message', message =>
+{
+    //if the bot sends a message with the prefix+command, it will ignore it in order to prevent infinite loop in some instances
+    if(message.author.bot)
+    {
         return;
     }
-    for (const commandName of ConfigFile.config.commands) {
-        const commandsClass = require(`${commandsPath}/${commandName}`).default;
-        const command = new commandsClass();
-        commands.push(command);
+    //Displays all commands
+    if(message.content.toLowerCase() === '!help' || message.content.toLowerCase() === '!commands')
+        message.channel.send("```" + commandsList + "```");
+
+    //Summons the rats(doesn't do anything special)
+    if(message.content.toLowerCase() === '!summon')
+    {
+        if(summoned == 0)
+        {
+            message.channel.send("ᘛ⁐̤ᕐᐷ⁐̤ᕐᐷ⁐̤ᕐᐷ"+ message.member.displayName + " HAS SUMMONED THE RATSᘛ⁐̤ᕐᐷ⁐̤ᕐᐷ⁐̤ᕐᐷ");
+            summoned = 1;
+        }
+        else
+        {
+            message.channel.send(message.member.displayName + " tried to summon more rats, but none came...");
+        }
     }
-}
-client.login(ConfigFile.config.token);
-//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaW5kZXguanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyIuLi9zcmMvaW5kZXgudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7Ozs7Ozs7OztBQUFBLHNDQUFzQztBQUN0Qyx1Q0FBdUM7QUFHdkMsTUFBTSxNQUFNLEdBQW1CLElBQUksT0FBTyxDQUFDLE1BQU0sRUFBRSxDQUFDO0FBRXBELElBQUksUUFBUSxHQUFrQixFQUFFLENBQUM7QUFFakMsWUFBWSxDQUFDLEdBQUcsU0FBUyxXQUFXLENBQUMsQ0FBQTtBQUVyQyxNQUFNLENBQUMsRUFBRSxDQUFDLE9BQU8sRUFBRSxHQUFHLEVBQUU7SUFHcEIsT0FBTyxDQUFDLEdBQUcsQ0FBQyxjQUFjLENBQUMsQ0FBQztBQUNoQyxDQUFDLENBQUMsQ0FBQTtBQUVGLE1BQU0sQ0FBQyxFQUFFLENBQUMsU0FBUyxFQUFFLEdBQUcsQ0FBQyxFQUFFO0lBR3ZCLElBQUcsR0FBRyxDQUFDLE1BQU0sQ0FBQyxHQUFHLEVBQ2pCO1FBQ0ksT0FBTztLQUNWO0lBR0QsSUFBRyxDQUFDLEdBQUcsQ0FBQyxPQUFPLENBQUMsVUFBVSxDQUFDLFVBQVUsQ0FBQyxNQUFNLENBQUMsTUFBTSxDQUFDLEVBQ3BEO1FBQ1EsT0FBTztLQUNkO0lBR0QsYUFBYSxDQUFDLEdBQUcsQ0FBQyxDQUFDO0FBRXZCLENBQUMsQ0FBQyxDQUFBO0FBRUYsU0FBZSxhQUFhLENBQUMsR0FBb0I7O1FBRzdDLElBQUksT0FBTyxHQUFHLEdBQUcsQ0FBQyxPQUFPLENBQUMsS0FBSyxDQUFDLEdBQUcsQ0FBQyxDQUFDLENBQUMsQ0FBQyxDQUFDLE9BQU8sQ0FBQyxVQUFVLENBQUMsTUFBTSxDQUFDLE1BQU0sRUFBRSxFQUFFLENBQUMsQ0FBQztRQUM5RSxJQUFJLElBQUksR0FBRyxHQUFHLENBQUMsT0FBTyxDQUFDLEtBQUssQ0FBQyxHQUFHLENBQUMsQ0FBQyxLQUFLLENBQUMsQ0FBQyxDQUFDLENBQUM7UUFHM0MsS0FBSSxNQUFNLFlBQVksSUFBSSxRQUFRLEVBQ2xDO1lBRUksSUFDQTtnQkFFSSxJQUFHLENBQUMsWUFBWSxDQUFDLGFBQWEsQ0FBQyxPQUFPLENBQUMsRUFDdkM7b0JBRUksU0FBUztpQkFDWjtnQkFHRCxNQUFNLFlBQVksQ0FBQyxVQUFVLENBQUMsSUFBSSxFQUFFLEdBQUcsRUFBRSxNQUFNLENBQUMsQ0FBQzthQUNwRDtZQUNELE9BQU0sU0FBUyxFQUNmO2dCQUVJLE9BQU8sQ0FBQyxHQUFHLENBQUMsU0FBUyxDQUFDLENBQUM7YUFDMUI7U0FDSjtJQUNMLENBQUM7Q0FBQTtBQUVELFNBQVMsWUFBWSxDQUFDLFlBQW9CO0lBR3RDLElBQUcsQ0FBQyxVQUFVLENBQUMsTUFBTSxJQUFLLFVBQVUsQ0FBQyxNQUFNLENBQUMsUUFBcUIsQ0FBQyxNQUFNLEtBQUssQ0FBQyxFQUM5RTtRQUNJLE9BQU87S0FDVjtJQUdELEtBQUksTUFBTSxXQUFXLElBQUksVUFBVSxDQUFDLE1BQU0sQ0FBQyxRQUFvQixFQUMvRDtRQUNJLE1BQU0sYUFBYSxHQUFHLE9BQU8sQ0FBQyxHQUFHLFlBQVksSUFBSSxXQUFXLEVBQUUsQ0FBQyxDQUFDLE9BQU8sQ0FBQztRQUV4RSxNQUFNLE9BQU8sR0FBRyxJQUFJLGFBQWEsRUFBaUIsQ0FBQztRQUVuRCxRQUFRLENBQUMsSUFBSSxDQUFDLE9BQU8sQ0FBQyxDQUFDO0tBQzFCO0FBQ0wsQ0FBQztBQUNELE1BQU0sQ0FBQyxLQUFLLENBQUMsVUFBVSxDQUFDLE1BQU0sQ0FBQyxLQUFLLENBQUMsQ0FBQyJ9
+
+    //Sends the rats away (disables the music playing functionality until they're summoned again)
+    if(message.content.toLowerCase() === '!disperse')
+    {
+        if(summoned == 0)
+        {
+            return message.channel.send("There are no rats here " + message.member.displayName);
+        }
+        else
+        {
+            message.channel.send(message.member.displayName + " sends the rats back to their holes");
+            return summoned = 0;
+        }
+    }
+
+    //This is where all of the music commands will go
+    if(summoned)
+    {
+            const voiceChannel = message.member.voice.channel;
+            if(!voiceChannel)
+            {
+                return message.channel.send("You have to be in a voice channel to use their full capabilities " + message.member.displayName);
+            }
+
+            const permissions = voiceChannel.permissionsFor(message.client.user);
+            if(!permissions.has("CONNECT")|| !permissions.has("SPEAK"))
+            {
+                return message.channel.send("Why are you silencing the frens? (RatBot does not have permission to join the voice channel)");
+            }
+            
+            client.on('message', message => 
+            {
+                //Disconnects bot from voice channel
+                if(message.content.toLowerCase() == '!stop' && inCall)
+                {
+                    inCall = 0;
+                    return voiceChannel.leave();
+                }
+
+                //OG Mixtape
+                if(message.content.toLowerCase() === '!mixtape' && summoned)
+                {                
+                    message.member.voice.channel.join().then(connection => 
+                    {
+                        connection.play(ytdl('https://www.youtube.com/watch?v=vdVnnMOTe3Q', {volume: '0.5'}, {filter: 'audioonly'})).on("end", end => {
+                            connection.channel.leave();
+                        });
+                    }).catch(console.error);
+                    inCall = 1;
+                }
+                //All Star
+                if(message.content.toLowerCase() === '!shrek' && summoned)
+                {                
+                    message.member.voice.channel.join().then(connection => 
+                    {
+                        connection.play(ytdl('youtube.com/watch?v=Ni5gDtogseI&list=PLm3DCZOWCOqxZKaaHT5BxdgXy1i2fWGGG&index=2', {volume: '0.5'}, {filter: 'audioonly'})).on("end", end => {
+                            connection.channel.leave();
+                        });
+                    }).catch(console.error);
+                    inCall = 1;
+                }
+                //YMCA
+                if(message.content.toLowerCase() === '!village' && summoned)
+                {                
+                    message.member.voice.channel.join().then(connection => 
+                    {
+                        connection.play(ytdl('https://www.youtube.com/watch?v=BAYbgrNggX0&list=PLm3DCZOWCOqxZKaaHT5BxdgXy1i2fWGGG&index=3', {volume: '0.5'}, {filter: 'audioonly'})).on("end", end => {
+                            connection.channel.leave();
+                        });
+                    }).catch(console.error);
+                    inCall = 1;
+                }
+                //In the End
+                if(message.content.toLowerCase() === '!edge' && summoned)
+                {                
+                    message.member.voice.channel.join().then(connection => 
+                    {
+                        connection.play(ytdl('https://www.youtube.com/watch?v=pvfLsJIOCIM&list=PLmtYYJsHYKLupNT6QvzRljGgfUKbQfq_a&index=14', {volume: '0.5'}, {filter: 'audioonly'})).on("end", end => {
+                            connection.channel.leave();
+                        });
+                    }).catch(console.error);
+                    inCall = 1;
+                }
+                //Stadium Rave
+                if(message.content.toLowerCase() === '!sponge' && summoned)
+                {                
+                    message.member.voice.channel.join().then(connection => 
+                    {
+                        connection.play(ytdl('https://www.youtube.com/watch?v=QOb9I_g19rw&list=PLm3DCZOWCOqxZKaaHT5BxdgXy1i2fWGGG&index=7', {volume: '0.5'}, {filter: 'audioonly'})).on("end", end => {
+                            connection.channel.leave();
+                        });
+                    }).catch(console.error);
+                    inCall = 1;
+                }
+                //Fornite Death Sound
+                if(message.content.toLowerCase() === '!fortnite' && summoned)
+                {                
+                    message.member.voice.channel.join().then(connection => 
+                    {
+                        connection.play(ytdl('https://www.youtube.com/watch?v=la2tCfiXZYw', {volume: '0.5'}, {filter: 'audioonly'})).on("end", end => {
+                            connection.channel.leave();
+                        });
+                    }).catch(console.error);
+                    inCall = 1;
+                }
+                 //Halo Main Theme
+                 if(message.content.toLowerCase() === '!xbox' && summoned)
+                 {                
+                     message.member.voice.channel.join().then(connection => 
+                     {
+                         connection.play(ytdl('https://www.youtube.com/watch?v=0jXTBAGv9ZQ', {volume: '0.5'}, {filter: 'audioonly'})).on("end", end => {
+                             connection.channel.leave();
+                         });
+                     }).catch(console.error);
+                     inCall = 1;
+                 }
+                  //Me? Gongaga
+                  if(message.content.toLowerCase() === '!he' && summoned)
+                  {                
+                      message.member.voice.channel.join().then(connection => 
+                      {
+                          connection.play(ytdl('https://www.youtube.com/watch?v=0jXTBAGv9ZQ', {volume: '0.5'}, {filter: 'audioonly'})).on("end", end => {
+                              connection.channel.leave();
+                          });
+                      }).catch(console.error);
+                      inCall = 1;
+                  }
+                 //Rat Movie
+                if(message.content.toLowerCase() === '!movie' && summoned)
+                {                
+                    message.member.voice.channel.join().then(connection => 
+                    {
+                        connection.play(ytdl('https://youtu.be/jAXioRNYy4s', {volume: '0.5'}, {filter: 'audioonly'})).on("end", end => {
+                            connection.channel.leave();
+                        });
+                    }).catch(console.error);
+                    inCall = 1;
+                }
+                //Rat Movie 2
+                if(message.content.toLowerCase() === '!movie2' && summoned)
+                {                
+                    message.member.voice.channel.join().then(connection => 
+                    {
+                        connection.play(ytdl('https://youtu.be/mNy9HIo3shs', {volume: '0.5'}, {filter: 'audioonly'})).on("end", end => {
+                            connection.channel.leave();
+                        });
+                    }).catch(console.error);
+                    inCall = 1;
+                }
+            });
+    }
+    else
+    {
+        return message.channel.send("The rats can't sing a beautiful song if they aren't here. Use !summon.");
+    }
+});
+
